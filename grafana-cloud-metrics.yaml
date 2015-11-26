@@ -20,7 +20,7 @@
 heat_template_version: 2013-05-23
 
 description: >
-  Puts together a server that will run Grafana using Cloud Metrics data.
+  Puts together a server that will run Grafana using Rackspace Metrics data.
 
 parameter_groups:
   - label: 'Server Settings'
@@ -229,6 +229,20 @@ resources:
               urls:
                 - http://iad.metrics.api.rackspacecloud.com
             EOL
+            cd /tmp/blueflood
+            mkdir -p /usr/share/middleman
+            git checkout goru97/grafana_proxy
+            cp -r ./contrib/garafana/grafana_1.x/middleman/* /usr/share/middleman
+            cd /usr/share/middleman
+            ./generateCertificate.sh
+            apt-get -y install nodejs
+            ln -s `which nodejs` /usr/bin/node
+            apt-get -y install npm
+            npm install
+            npm install forever -g
+            forever start middleman.js
+
+            EOL
             cd /usr/share/nginx/grafana/plugins
             mkdir datasource
             cp -r /tmp/blueflood/contrib/garafana/grafana_1.x/blueflood ./datasource
@@ -252,7 +266,8 @@ resources:
                     url: 'http://iad.metrics.api.rackspacecloud.com',
                     username: 'rax_username',
                     apikey: 'rax_apikey',
-                    tenantID: 'rax_tenant'
+                    tenantID: 'rax_tenant',
+                    proxyEnabled: true
                   }
                 },
                 search: {
